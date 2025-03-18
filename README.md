@@ -1,6 +1,6 @@
 # Minimal Three.js React Template
 
-A minimal, best-practices template for Three.js applications built with React.
+A minimal, best-practices template for Three.js applications built with React and Vite.
 
 ## Features
 
@@ -8,6 +8,7 @@ A minimal, best-practices template for Three.js applications built with React.
 - **Resource Management**: Proper cleanup of Three.js resources
 - **Reusable Components**: Modular design for building complex 3D applications
 - **Best Practices**: Following React and Three.js ecosystem recommendations
+- **Fast Development**: Powered by Vite for lightning-fast builds and hot module replacement
 
 ## Project Structure
 
@@ -17,11 +18,11 @@ src/
     Scene.jsx          # Generic scene with camera controls
     Model.jsx          # Model loader with resource management
   hooks/               # Custom React hooks
-    useThreeContext.js # Context for sharing Three.js state
+    useThreeContext.jsx # Context for sharing Three.js state
   scenes/              # Scene definitions
     BasicScene.jsx     # Example scene with best practices
-  App.js               # Main application component
-  index.js             # Application entry point
+  App.jsx              # Main application component
+  index.jsx            # Application entry point
   index.css            # Global styling
 ```
 
@@ -35,6 +36,14 @@ src/
 3. Start the development server:
    ```
    pnpm start
+   ```
+4. Build for production:
+   ```
+   pnpm build
+   ```
+5. Preview production build:
+   ```
+   pnpm preview
    ```
 
 ## Best Practices Used
@@ -60,3 +69,5 @@ src/
 - [Three.js](https://threejs.org/) - 3D graphics library
 - [@react-three/fiber](https://docs.pmnd.rs/react-three-fiber) - React renderer for Three.js
 - [@react-three/drei](https://docs.pmnd.rs/drei) - Useful helpers for react-three-fiber
+- [@react-three/cannon](https://github.com/pmndrs/use-cannon/blob/master/packages/react-three-cannon/README.md) - React hooks for cannon-es. Use this in combination with react-three-fiber
+- [Vite](https://vitejs.dev/) - Next generation frontend tooling
