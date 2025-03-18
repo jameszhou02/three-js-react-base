@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { ThreeProvider } from "./hooks/useThreeContext";
-import Scene from "./components/Scene";
-import BasicScene from "./scenes/BasicScene";
-import PhysicsScene from "./scenes/PhysicsScene";
-import InteractivePhysicsScene from "./scenes/InteractivePhysicsScene";
-import ConstraintsPhysicsScene from "./scenes/ConstraintsPhysicsScene";
+import { ThreeProvider } from "./hooks/useThreeContext.jsx";
+import Scene from "./components/Scene.jsx";
+import BasicScene from "./scenes/BasicScene.jsx";
+import PhysicsScene from "./scenes/PhysicsScene.jsx";
+import InteractivePhysicsScene from "./scenes/InteractivePhysicsScene.jsx";
+import ConstraintsPhysicsScene from "./scenes/ConstraintsPhysicsScene.jsx";
 
 function App() {
   const [activeScene, setActiveScene] = useState("basic");
