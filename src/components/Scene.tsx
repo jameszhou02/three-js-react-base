@@ -1,11 +1,13 @@
-import React, { useRef } from "react";
+import { useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { Mesh } from "three";
+import { SceneProps, Vector3Tuple } from "../types";
 
 const SceneContent = () => {
-  const boxRef = useRef();
+  const boxRef = useRef<Mesh>(null);
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (boxRef.current) {
       boxRef.current.rotation.x += delta * 0.5;
       boxRef.current.rotation.y += delta * 0.2;
@@ -36,10 +38,19 @@ const SceneContent = () => {
   );
 };
 
-const Scene = () => {
+const Scene = ({
+  shadows = true,
+  camera = { position: [3, 3, 3], fov: 75 },
+}: SceneProps) => {
+  const { position, fov } = camera;
+
   return (
-    <Canvas shadows>
-      <PerspectiveCamera makeDefault position={[3, 3, 3]} />
+    <Canvas shadows={shadows}>
+      <PerspectiveCamera
+        makeDefault
+        position={position as Vector3Tuple}
+        fov={fov}
+      />
       <OrbitControls enableDamping dampingFactor={0.05} />
       <SceneContent />
     </Canvas>

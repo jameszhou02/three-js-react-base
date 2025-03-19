@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import {
@@ -9,10 +9,11 @@ import {
   useSphere,
 } from "@react-three/cannon";
 import * as THREE from "three";
+import type { Triplet, PlaneProps } from "@react-three/cannon";
 
 // Floor plane
-function Floor(props) {
-  const [ref] = usePlane(() => ({
+function Floor(props: PlaneProps) {
+  const [ref] = usePlane<THREE.Mesh>(() => ({
     rotation: [-Math.PI / 2, 0, 0],
     ...props,
   }));
@@ -26,7 +27,13 @@ function Floor(props) {
 }
 
 // Chain link consisting of boxes connected by springs
-function Chain({ position, links = 8, linkLength = 0.5 }) {
+interface ChainProps {
+  position: Triplet;
+  links?: number;
+  linkLength?: number;
+}
+
+function Chain({ position, links = 8, linkLength = 0.5 }: ChainProps) {
   return (
     <group position={position}>
       {/* Fixed anchor at the top */}
@@ -46,8 +53,12 @@ function Chain({ position, links = 8, linkLength = 0.5 }) {
 }
 
 // Fixed anchor point
-function Anchor({ position }) {
-  const [ref] = useBox(() => ({
+interface AnchorProps {
+  position: Triplet;
+}
+
+function Anchor({ position }: AnchorProps) {
+  const [ref] = useBox<THREE.Mesh>(() => ({
     mass: 0,
     position,
     args: [0.3, 0.3, 0.3],
@@ -62,8 +73,14 @@ function Anchor({ position }) {
 }
 
 // Individual chain link with spring constraint
-function ChainLink({ position, previousPosition, isFirst }) {
-  const [ref, api] = useBox(() => ({
+interface ChainLinkProps {
+  position: Triplet;
+  previousPosition: Triplet;
+  isFirst: boolean;
+}
+
+function ChainLink({ position, previousPosition, isFirst }: ChainLinkProps) {
+  const [ref, _api] = useBox<THREE.Mesh>(() => ({
     mass: 1,
     position,
     args: [0.25, 0.25, 0.25],
@@ -88,16 +105,22 @@ function ChainLink({ position, previousPosition, isFirst }) {
 }
 
 // Pendulum with a sphere at the end
-function Pendulum({ position, length = 3, sphereRadius = 0.5 }) {
+interface PendulumProps {
+  position: Triplet;
+  length?: number;
+  sphereRadius?: number;
+}
+
+function Pendulum({ position, length = 3, sphereRadius = 0.5 }: PendulumProps) {
   // Anchor at the top
-  const [anchorRef] = useBox(() => ({
+  const [anchorRef] = useBox<THREE.Mesh>(() => ({
     mass: 0,
     position,
     args: [0.2, 0.2, 0.2],
   }));
 
   // Pendulum bob
-  const [bobRef, api] = useSphere(() => ({
+  const [bobRef, api] = useSphere<THREE.Mesh>(() => ({
     mass: 1,
     position: [position[0], position[1] - length, position[2]],
     args: [sphereRadius],
@@ -118,8 +141,7 @@ function Pendulum({ position, length = 3, sphereRadius = 0.5 }) {
 
   // Draw a line to visualize the pendulum string
   const points = useRef([new THREE.Vector3(), new THREE.Vector3()]);
-
-  const lineRef = useRef();
+  const lineRef = useRef<THREE.LineSegments>(null);
 
   useFrame(() => {
     if (anchorRef.current && bobRef.current && lineRef.current) {
@@ -128,8 +150,9 @@ function Pendulum({ position, length = 3, sphereRadius = 0.5 }) {
       bobRef.current.getWorldPosition(points.current[1]);
 
       // Update line geometry
-      lineRef.current.geometry.setFromPoints(points.current);
-      lineRef.current.geometry.verticesNeedUpdate = true;
+      if (lineRef.current.geometry instanceof THREE.BufferGeometry) {
+        lineRef.current.geometry.setFromPoints(points.current);
+      }
     }
   });
 
@@ -145,25 +168,29 @@ function Pendulum({ position, length = 3, sphereRadius = 0.5 }) {
         <meshStandardMaterial color="orange" />
       </mesh>
 
-      <line ref={lineRef}>
+      <lineSegments ref={lineRef}>
         <bufferGeometry attach="geometry" />
         <lineBasicMaterial attach="material" color="white" linewidth={1} />
-      </line>
+      </lineSegments>
     </>
   );
 }
 
 // Spring-connected boxes
-function SpringBoxes({ position }) {
+interface SpringBoxesProps {
+  position: Triplet;
+}
+
+function SpringBoxes({ position }: SpringBoxesProps) {
   // First box (fixed)
-  const [boxARef] = useBox(() => ({
+  const [boxARef] = useBox<THREE.Mesh>(() => ({
     mass: 0,
     position: [position[0] - 2, position[1], position[2]],
     args: [0.5, 0.5, 0.5],
   }));
 
   // Second box (movable)
-  const [boxBRef, api] = useBox(() => ({
+  const [boxBRef, api] = useBox<THREE.Mesh>(() => ({
     mass: 1,
     position: [position[0] + 2, position[1], position[2]],
     args: [0.5, 0.5, 0.5],
@@ -189,8 +216,7 @@ function SpringBoxes({ position }) {
 
   // Draw a line to visualize the spring
   const points = useRef([new THREE.Vector3(), new THREE.Vector3()]);
-
-  const lineRef = useRef();
+  const lineRef = useRef<THREE.LineSegments>(null);
 
   useFrame(() => {
     if (boxARef.current && boxBRef.current && lineRef.current) {
@@ -199,8 +225,9 @@ function SpringBoxes({ position }) {
       boxBRef.current.getWorldPosition(points.current[1]);
 
       // Update line geometry
-      lineRef.current.geometry.setFromPoints(points.current);
-      lineRef.current.geometry.verticesNeedUpdate = true;
+      if (lineRef.current.geometry instanceof THREE.BufferGeometry) {
+        lineRef.current.geometry.setFromPoints(points.current);
+      }
     }
   });
 
@@ -216,16 +243,10 @@ function SpringBoxes({ position }) {
         <meshStandardMaterial color="lightgreen" />
       </mesh>
 
-      <line ref={lineRef}>
+      <lineSegments ref={lineRef}>
         <bufferGeometry attach="geometry" />
-        <lineBasicMaterial
-          attach="material"
-          color="white"
-          linewidth={1}
-          dashSize={0.2}
-          gapSize={0.1}
-        />
-      </line>
+        <lineBasicMaterial attach="material" color="white" linewidth={1} />
+      </lineSegments>
     </>
   );
 }

@@ -1,13 +1,13 @@
-import React, { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Environment, Stats } from "@react-three/drei";
+import { OrbitControls, Environment } from "@react-three/drei";
 import { useThreeContext } from "../hooks/useThreeContext";
 
 // Main scene content separate from Canvas for better organization
 const SceneContent = () => {
   const { setSceneReady } = useThreeContext();
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Signal that the scene is ready
     setSceneReady(true);
 

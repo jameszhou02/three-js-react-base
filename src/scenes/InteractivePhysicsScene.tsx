@@ -1,13 +1,23 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useRef, useState } from "react";
+import { Canvas, useFrame, ThreeEvent } from "@react-three/fiber";
 import { Physics, useBox, usePlane, useSphere } from "@react-three/cannon";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
+import type { Triplet, PlaneProps } from "@react-three/cannon";
 
 // Draggable physics object
-function DraggableObject({ position, size = [1, 1, 1], color = "white" }) {
-  const { camera, gl, viewport } = useThree();
-  const [ref, api] = useBox(() => ({
+interface DraggableObjectProps {
+  position: Triplet;
+  size?: [number, number, number];
+  color?: string;
+}
+
+function DraggableObject({
+  position,
+  size = [1, 1, 1],
+  color = "white",
+}: DraggableObjectProps) {
+  const [ref, api] = useBox<THREE.Mesh>(() => ({
     mass: 1,
     position,
     args: size,
@@ -15,7 +25,7 @@ function DraggableObject({ position, size = [1, 1, 1], color = "white" }) {
 
   // Track if we're dragging this object
   const [isDragging, setIsDragging] = useState(false);
-  const dragPos = useRef([0, 0, 0]);
+  const dragPos = useRef<Triplet>([0, 0, 0]);
 
   useEffect(() => {
     // Store position while dragging
@@ -41,16 +51,16 @@ function DraggableObject({ position, size = [1, 1, 1], color = "white" }) {
   });
 
   // Mouse event handlers
-  const onPointerDown = (e) => {
+  const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
     setIsDragging(true);
-    e.target.setPointerCapture(e.pointerId);
+    (e.target as Element).setPointerCapture(e.pointerId);
   };
 
-  const onPointerUp = (e) => {
+  const onPointerUp = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
     setIsDragging(false);
-    e.target.releasePointerCapture(e.pointerId);
+    (e.target as Element).releasePointerCapture(e.pointerId);
 
     // Apply a random impulse when releasing
     api.applyImpulse(
@@ -78,8 +88,8 @@ function DraggableObject({ position, size = [1, 1, 1], color = "white" }) {
 }
 
 // Floor plane
-function Floor(props) {
-  const [ref] = usePlane(() => ({
+function Floor(props: PlaneProps) {
+  const [ref] = usePlane<THREE.Mesh>(() => ({
     rotation: [-Math.PI / 2, 0, 0],
     ...props,
   }));
@@ -102,25 +112,25 @@ function Walls() {
   return (
     <>
       {/* Back wall */}
-      <Box
+      <WallBox
         position={[0, wallHeight / 2, -wallSize / 2]}
         args={[wallSize, wallHeight, wallThickness]}
         {...wallProps}
       />
       {/* Front wall */}
-      <Box
+      <WallBox
         position={[0, wallHeight / 2, wallSize / 2]}
         args={[wallSize, wallHeight, wallThickness]}
         {...wallProps}
       />
       {/* Left wall */}
-      <Box
+      <WallBox
         position={[-wallSize / 2, wallHeight / 2, 0]}
         args={[wallThickness, wallHeight, wallSize]}
         {...wallProps}
       />
       {/* Right wall */}
-      <Box
+      <WallBox
         position={[wallSize / 2, wallHeight / 2, 0]}
         args={[wallThickness, wallHeight, wallSize]}
         {...wallProps}
@@ -130,8 +140,25 @@ function Walls() {
 }
 
 // Simple box for walls
-function Box({ position, args, ...props }) {
-  const [ref] = useBox(() => ({ position, args, ...props }));
+interface CustomBoxProps {
+  position: Triplet;
+  args: [number, number, number];
+  mass?: number;
+  type?: "Static" | "Dynamic" | "Kinematic";
+  material?: {
+    friction?: number;
+    restitution?: number;
+  };
+  linearDamping?: number;
+  angularDamping?: number;
+  collisionFilterGroup?: number;
+  collisionFilterMask?: number;
+  fixedRotation?: boolean;
+  userData?: Record<string, unknown>;
+}
+
+function WallBox({ position, args, ...props }: CustomBoxProps) {
+  const [ref] = useBox<THREE.Mesh>(() => ({ position, args, ...props }));
 
   return (
     <mesh ref={ref} castShadow receiveShadow>
@@ -142,8 +169,18 @@ function Box({ position, args, ...props }) {
 }
 
 // Bouncy sphere
-function BouncySphere({ position, radius = 1, color = "hotpink" }) {
-  const [ref, api] = useSphere(() => ({
+interface BouncySphereProps {
+  position: Triplet;
+  radius?: number;
+  color?: string;
+}
+
+function BouncySphere({
+  position,
+  radius = 1,
+  color = "hotpink",
+}: BouncySphereProps) {
+  const [ref, api] = useSphere<THREE.Mesh>(() => ({
     mass: 1,
     position,
     args: [radius],

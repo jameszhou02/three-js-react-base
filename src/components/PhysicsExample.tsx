@@ -4,7 +4,6 @@ import {
   Physics,
   useBox,
   usePlane,
-  useSphere,
   useCompoundBody,
 } from "@react-three/cannon";
 import {
@@ -13,13 +12,38 @@ import {
   PHYSICS_WORLD_CONFIGS,
   usePhysicsControls,
 } from "../utils/physics";
+import {
+  FloorProps,
+  PhysicsObjectProps,
+  Vector3Tuple,
+  PhysicsApi,
+} from "../types";
+import type { PublicApi } from "@react-three/cannon";
+
+/**
+ * Helper function to safely convert from @react-three/cannon's API to our PhysicsApi type
+ * This is type-safe and ensures we only access methods that exist on both types
+ */
+function toPhysicsApi(api: PublicApi): PhysicsApi {
+  return {
+    position: api.position,
+    rotation: api.rotation,
+    velocity: api.velocity,
+    angularVelocity: api.angularVelocity,
+    applyForce: api.applyForce,
+    applyImpulse: api.applyImpulse,
+    applyTorque: api.applyTorque,
+    sleep: api.sleep,
+    wakeUp: api.wakeUp,
+  };
+}
 
 // Reusable floor component with physics
-const Floor = ({ size = [10, 10], position = [0, 0, 0] }) => {
+const Floor = ({ size = [10, 10], position = [0, 0, 0] }: FloorProps) => {
   // Note args is an array
   const [ref] = usePlane(() => ({
     rotation: [-Math.PI / 2, 0, 0],
-    position,
+    position: position as Vector3Tuple,
     args: size,
     type: "Static",
     material: PHYSICS_MATERIALS.default,
@@ -42,11 +66,11 @@ const PhysicsBox = ({
   color = "white",
   mass = 1,
   isDraggable = false,
-}) => {
+}: PhysicsObjectProps) => {
   // Using proper args as an array
   const [ref, api] = useBox(() => ({
     mass,
-    position,
+    position: position as Vector3Tuple,
     args: size,
     material: PHYSICS_MATERIALS.default,
     collisionFilterGroup: COLLISION_GROUPS.DYNAMIC,
@@ -58,7 +82,7 @@ const PhysicsBox = ({
 
   // Track position for dragging
   const [isDragging, setIsDragging] = useState(false);
-  const currentPos = useRef([0, 0, 0]);
+  const currentPos = useRef<Vector3Tuple>([0, 0, 0]);
 
   // Subscribe to position updates - proper cleanup
   useEffect(() => {
@@ -84,24 +108,27 @@ const PhysicsBox = ({
   });
 
   // Use our custom hook for physics controls
-  const { applyImpulse, resetTransform } = usePhysicsControls(api);
+  // Convert api to PhysicsApi safely using our utility function
+  const { applyImpulse, resetTransform } = usePhysicsControls(
+    toPhysicsApi(api)
+  );
 
   // Event handlers for interaction
-  const handlePointerDown = (e) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggable) return;
 
     e.stopPropagation();
     setIsDragging(true);
-    e.target.setPointerCapture(e.pointerId);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
     resetTransform();
   };
 
-  const handlePointerUp = (e) => {
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggable) return;
 
     e.stopPropagation();
     setIsDragging(false);
-    e.target.releasePointerCapture(e.pointerId);
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
 
     // Apply random impulse on release
     applyImpulse(
@@ -129,14 +156,18 @@ const PhysicsBox = ({
 };
 
 // Complex object with compound physics body
-const CompoundObject = ({ position = [0, 0, 0] }) => {
+const CompoundObject = ({
+  position = [0, 0, 0],
+}: {
+  position?: Vector3Tuple;
+}) => {
   // Using compound body for complex shapes
   const [ref, api] = useCompoundBody(() => ({
     mass: 1,
     position,
     shapes: [
-      { type: "box", position: [0, 0, 0], args: [1, 0.5, 1] },
-      { type: "sphere", position: [0, 0.5, 0], args: [0.5] },
+      { type: "Box", position: [0, 0, 0], args: [1, 0.5, 1] },
+      { type: "Sphere", position: [0, 0.5, 0], args: [0.5] },
     ],
     linearDamping: 0.2,
     angularDamping: 0.2,

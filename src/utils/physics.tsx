@@ -1,8 +1,17 @@
 import { useCallback } from "react";
 import * as THREE from "three";
+import {
+  PhysicsMaterial,
+  PhysicsPreset,
+  PhysicsWorldConfig,
+  PhysicsApi,
+  CollisionGroups as CollisionGroupsType,
+  PhysicsControls,
+  Vector3Tuple,
+} from "../types";
 
 // Common physics materials with appropriate properties
-export const PHYSICS_MATERIALS = {
+export const PHYSICS_MATERIALS: Record<string, PhysicsMaterial> = {
   default: { restitution: 0.3, friction: 0.5 },
   bouncy: { restitution: 0.8, friction: 0.3 },
   slippery: { restitution: 0.2, friction: 0.1 },
@@ -13,7 +22,7 @@ export const PHYSICS_MATERIALS = {
 };
 
 // Common collision groups for filtering collisions
-export const COLLISION_GROUPS = {
+export const COLLISION_GROUPS: CollisionGroupsType = {
   DEFAULT: 1,
   STATIC: 2,
   DYNAMIC: 4,
@@ -25,13 +34,16 @@ export const COLLISION_GROUPS = {
 };
 
 // Utility to create collision filters
-export const createCollisionFilter = (belongsTo, collidesWith) => ({
+export const createCollisionFilter = (
+  belongsTo: number,
+  collidesWith: number
+) => ({
   belongsTo,
   collidesWith,
 });
 
 // Common physics presets for different object types
-export const PHYSICS_PRESETS = {
+export const PHYSICS_PRESETS: Record<string, PhysicsPreset> = {
   static: {
     mass: 0,
     material: PHYSICS_MATERIALS.default,
@@ -58,9 +70,9 @@ export const PHYSICS_PRESETS = {
 };
 
 // Hook to handle physics interactions like applying forces
-export const usePhysicsControls = (api) => {
+export const usePhysicsControls = (api: PhysicsApi | null): PhysicsControls => {
   const applyForce = useCallback(
-    (force, worldPoint = [0, 0, 0]) => {
+    (force: Vector3Tuple, worldPoint: Vector3Tuple = [0, 0, 0]) => {
       if (api) {
         api.applyForce(force, worldPoint);
       }
@@ -69,7 +81,7 @@ export const usePhysicsControls = (api) => {
   );
 
   const applyImpulse = useCallback(
-    (impulse, worldPoint = [0, 0, 0]) => {
+    (impulse: Vector3Tuple, worldPoint: Vector3Tuple = [0, 0, 0]) => {
       if (api) {
         api.applyImpulse(impulse, worldPoint);
       }
@@ -78,7 +90,7 @@ export const usePhysicsControls = (api) => {
   );
 
   const setVelocity = useCallback(
-    (velocity) => {
+    (velocity: Vector3Tuple) => {
       if (api) {
         api.velocity.set(...velocity);
       }
@@ -87,7 +99,7 @@ export const usePhysicsControls = (api) => {
   );
 
   const setAngularVelocity = useCallback(
-    (angularVelocity) => {
+    (angularVelocity: Vector3Tuple) => {
       if (api) {
         api.angularVelocity.set(...angularVelocity);
       }
@@ -96,7 +108,7 @@ export const usePhysicsControls = (api) => {
   );
 
   const setPosition = useCallback(
-    (position) => {
+    (position: Vector3Tuple) => {
       if (api) {
         api.position.set(...position);
       }
@@ -122,7 +134,7 @@ export const usePhysicsControls = (api) => {
 };
 
 // Physics configuration presets for different scenarios
-export const PHYSICS_WORLD_CONFIGS = {
+export const PHYSICS_WORLD_CONFIGS: Record<string, PhysicsWorldConfig> = {
   standard: {
     gravity: [0, -9.81, 0],
     defaultContactMaterial: PHYSICS_MATERIALS.default,
@@ -142,7 +154,7 @@ export const PHYSICS_WORLD_CONFIGS = {
 };
 
 // Helper to map mesh to appropriate physics body
-export const getCollisionShapeFromMesh = (mesh) => {
+export const getCollisionShapeFromMesh = (mesh: THREE.Mesh | null): string => {
   // This is a simplified version
   // In a real implementation, you would analyze the geometry
   if (!mesh) return "box";
@@ -160,7 +172,7 @@ export const getCollisionShapeFromMesh = (mesh) => {
 };
 
 // Create a simplified collision shape for complex meshes
-export const createSimplifiedCollisionShape = (mesh) => {
+export const createSimplifiedCollisionShape = (mesh: THREE.Object3D | null) => {
   if (!mesh) return null;
 
   // Here we would implement more complex logic to generate

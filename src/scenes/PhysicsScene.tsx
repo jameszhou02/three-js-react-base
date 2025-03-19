@@ -1,10 +1,20 @@
-import React, { useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import React from "react";
+import { Canvas } from "@react-three/fiber";
 import { Physics, usePlane, useSphere } from "@react-three/cannon";
 import { OrbitControls } from "@react-three/drei";
+import * as THREE from "three";
+import type {
+  Triplet,
+  PlaneProps as CannonPlaneProps,
+} from "@react-three/cannon";
 
-function Plane(props) {
-  const [ref] = usePlane(() => ({ rotation: [-Math.PI / 2, 0, 0], ...props }));
+interface PlaneProps extends CannonPlaneProps {}
+
+function Plane(props: PlaneProps) {
+  const [ref] = usePlane<THREE.Mesh>(() => ({
+    rotation: [-Math.PI / 2, 0, 0],
+    ...props,
+  }));
   return (
     <mesh ref={ref} receiveShadow>
       <planeGeometry args={[10, 10]} />
@@ -13,8 +23,13 @@ function Plane(props) {
   );
 }
 
-function Ball({ position, color }) {
-  const [ref, api] = useSphere(() => ({
+interface BallProps {
+  position: Triplet;
+  color: string;
+}
+
+function Ball({ position, color }: BallProps) {
+  const [ref, api] = useSphere<THREE.Mesh>(() => ({
     mass: 1,
     position,
     args: [0.5],
